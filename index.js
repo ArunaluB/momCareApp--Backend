@@ -6,10 +6,7 @@ const cors = require('cors');
 
 const PORT = process.env.PORT || 8001;
 
-// Enable CORS with default options (you can customize as needed)
 app.use(cors({ origin: '*' })); 
-
-// Middleware to parse JSON
 app.use(express.json());
 
 const visitSchema = new mongoose.Schema({
@@ -23,7 +20,7 @@ const visitSchema = new mongoose.Schema({
 const healthTipSchema = new mongoose.Schema({
     doctorName: String,
     healthTips: String,
-  });
+});
 
 const Visit = mongoose.model('Visit', visitSchema);
 const Note = mongoose.model('Note', healthTipSchema);
@@ -52,27 +49,21 @@ app.post('/add-note', async (req, res) => {
 
 app.get('/', async (req, res) => {
     try {
-        console.log("awa");
         res.status(200).send({ message: 'Visit added successfully' });
     } catch (error) {
         res.status(400).send({ error: 'Error saving visit data' });
     }
 });
 
-// GET API to fetch all visit data
 app.get('/visits', async (req, res) => {
-    
     try {
         const visits = await Visit.find();
-        console.log(visits);
         res.status(200).send(visits);
     } catch (error) {
         res.status(500).send({ error: 'Error fetching visit data' });
     }
 });
 
-
-// GET API to fetch all visit data
 app.get('/notes', async (req, res) => {
     try {
         const visits = await Note.find();
@@ -82,37 +73,30 @@ app.get('/notes', async (req, res) => {
     }
 });
 
-// GET API to fetch visit data for the current month
 app.get('/visits/current-month', async (req, res) => {
     const currentDate = new Date();
     const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // `getMonth` is zero-indexed, so add 1
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
 
     try {
-        // Find visits where selectedDate matches the current year and month
         const visits = await Visit.find({
-            selectedDate: {
-                $regex: `^${year}-${month}`, // Matches the format "YYYY-MM"
-            }
+            selectedDate: { $regex: `^${year}-${month}` }
         });
         res.status(200).send(visits);
     } catch (error) {
         res.status(500).send({ error: 'Error fetching current month visit data' });
     }
 });
-// GET API to fetch visit data for the current date
+
 app.get('/visits/current-date', async (req, res) => {
     const currentDate = new Date();
     const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // `getMonth` is zero-indexed, so add 1
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
     const day = String(currentDate.getDate()).padStart(2, '0');
 
     try {
-        // Find visits where selectedDate matches the current year, month, and day
         const visits = await Visit.find({
-            selectedDate: {
-                $regex: `^${year}-${month}-${day}`, // Matches the format "YYYY-MM-DD"
-            }
+            selectedDate: { $regex: `^${year}-${month}-${day}` }
         });
         res.status(200).send(visits);
     } catch (error) {
@@ -135,7 +119,6 @@ app.patch('/update-notification/:id', async (req, res) => {
     }
 });
 
-// Connect to MongoDB
 const connect = async () => {
     try {
         await mongoose.connect(process.env.MONGO);
@@ -145,7 +128,6 @@ const connect = async () => {
     }
 };
 
-// Start the server only after connecting to the database
 connect().then(() => {
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
