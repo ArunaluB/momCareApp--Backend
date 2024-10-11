@@ -28,8 +28,8 @@ const Visit = mongoose.model('Visit', visitSchema);
 const Note = mongoose.model('Note', healthTipSchema);
 
 // Pregnancy Routes
-app.use('/api/v1/pregnancy', PregnancyRoutes);
-app.use('/api/v1/health', healthRoutes); // Add health routes
+app.use('/pregnancy', PregnancyRoutes);
+app.use('/health', healthRoutes); // Add health routes
 
 app.post('/add-visit', async (req, res) => {
     try {
