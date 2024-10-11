@@ -3,6 +3,8 @@ const app = express();
 require("dotenv").config();
 const mongoose = require('mongoose');
 const cors = require('cors');
+const PregnancyRoutes = require('./routes/pregnancy');
+const healthRoutes = require('./routes/health'); // New health routes
 
 const PORT = process.env.PORT || 8001;
 
@@ -24,6 +26,10 @@ const healthTipSchema = new mongoose.Schema({
 
 const Visit = mongoose.model('Visit', visitSchema);
 const Note = mongoose.model('Note', healthTipSchema);
+
+// Pregnancy Routes
+app.use('/api/v1/pregnancy', PregnancyRoutes);
+app.use('/api/v1/health', healthRoutes); // Add health routes
 
 app.post('/add-visit', async (req, res) => {
     try {
