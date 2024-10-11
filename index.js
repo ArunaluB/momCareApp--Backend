@@ -24,7 +24,6 @@ const healthTipSchema = new mongoose.Schema({
 });
 
 const doctorSchema = new mongoose.Schema({
-    imageUrl: String,
     name: String,
     experience: String,
     qualifications: String,
@@ -48,12 +47,12 @@ const HealthMonitoringSchema = new mongoose.Schema({
         required: true,
         min: 0,
     },
-    ageDays: { // Updated field name
+    ageDays: {
         type: Number,
         required: true,
         min: 0,
     },
-    meanWeight: { // New field
+    meanWeight: { 
         type: Number,
         required: true,
         min: 0,
@@ -61,7 +60,7 @@ const HealthMonitoringSchema = new mongoose.Schema({
     healthStatus: {
         type: String,
         required: true,
-        enum: ['Good', 'Needs Attention'], // Define allowed values
+        enum: ['Good', 'Needs Attention'],
     },
     calculatedAt: {
         type: Date,
@@ -94,10 +93,8 @@ const pregnancySchema = new mongoose.Schema({
 const Visit = mongoose.model('Visit', visitSchema);
 const Note = mongoose.model('Note', healthTipSchema);
 const Doctor = mongoose.model('Doctor', doctorSchema);
-const Health = mongoose.model('Health', HealthMonitoringSchema); // Changed model name to 'Health'
-const Pregnancy = mongoose.model('Pregnancy', pregnancySchema); // Changed model name to 'Pregnancy'
-
-
+const Health = mongoose.model('Health', HealthMonitoringSchema); 
+const Pregnancy = mongoose.model('Pregnancy', pregnancySchema); 
 
 // // Pregnancy Routes
 // app.use('/pregnancy', PregnancyRoutes);
