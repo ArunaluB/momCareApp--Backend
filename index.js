@@ -3,12 +3,11 @@ const app = express();
 require("dotenv").config();
 const mongoose = require('mongoose');
 const cors = require('cors');
-// const PregnancyRoutes = require('./routes/pregnancy');
-// const healthRoutes = require('./routes/health'); 
+
 
 const PORT = process.env.PORT || 8001;
 
-app.use(cors({ origin: '*' })); 
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 const visitSchema = new mongoose.Schema({
@@ -24,8 +23,81 @@ const healthTipSchema = new mongoose.Schema({
     healthTips: String,
 });
 
+const doctorSchema = new mongoose.Schema({
+    imageUrl: String,
+    name: String,
+    experience: String,
+    qualifications: String,
+    rating: Number,
+    comments: String,
+});
+
+const HealthMonitoringSchema = new mongoose.Schema({
+    motherName: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+    babyHeight: {
+        type: Number,
+        required: true,
+        min: 0,
+    },
+    babyWeight: {
+        type: Number,
+        required: true,
+        min: 0,
+    },
+    ageDays: { // Updated field name
+        type: Number,
+        required: true,
+        min: 0,
+    },
+    meanWeight: { // New field
+        type: Number,
+        required: true,
+        min: 0,
+    },
+    healthStatus: {
+        type: String,
+        required: true,
+        enum: ['Good', 'Needs Attention'], // Define allowed values
+    },
+    calculatedAt: {
+        type: Date,
+        default: Date.now,
+    },
+});
+const pregnancySchema = new mongoose.Schema({
+    motherName: {
+        type: String,
+        required: true,
+    },
+    pregnancyStartDate: {
+        type: Date,
+        required: true,
+    },
+    estimatedDeliveryDate: {
+        type: Date,
+        // required: true,
+    },
+    deliveryDate: {
+        type: Date,
+    },
+    status: {
+        type: String,
+        enum: ['ongoing', 'delivered'],
+        default: 'ongoing',
+    },
+}, { timestamps: true });
+
 const Visit = mongoose.model('Visit', visitSchema);
 const Note = mongoose.model('Note', healthTipSchema);
+const Doctor = mongoose.model('Doctor', doctorSchema);
+const Health = mongoose.model('Health', HealthMonitoringSchema); // Changed model name to 'Health'
+const Pregnancy = mongoose.model('Pregnancy', pregnancySchema); // Changed model name to 'Pregnancy'
+
+
 
 // // Pregnancy Routes
 // app.use('/pregnancy', PregnancyRoutes);
@@ -124,6 +196,203 @@ app.patch('/update-notification/:id', async (req, res) => {
         res.status(500).send({ error: 'Error updating Notification' });
     }
 });
+
+app.delete('/delete-visit/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const visit = await Visit.findByIdAndDelete(id);
+        if (!visit) {
+            return res.status(404).send({ error: 'Visit not found' });
+        }
+        res.status(200).send({ message: 'Visit deleted successfully' });
+    } catch (error) {
+        res.status(500).send({ error: 'Error deleting visit' });
+    }
+});
+
+
+
+
+// Doctor Routes
+app.post('/add-doctor', async (req, res) => {
+    try {
+        const doctorData = new Doctor(req.body);
+        await doctorData.save();
+        res.status(201).send({ message: 'Doctor data added successfully' });
+    } catch (error) {
+        res.status(400).send({ error: 'Error saving doctor data' });
+    }
+});
+
+app.get('/doctors', async (req, res) => {
+    try {
+        const doctors = await Doctor.find();
+        res.status(200).send(doctors);
+    } catch (error) {
+        res.status(500).send({ error: 'Error fetching doctor data' });
+    }
+});
+
+app.patch('/update-rating/:id', async (req, res) => {
+    const { id } = req.params;
+    const { rating } = req.body;
+
+    try {
+        const doctor = await Doctor.findByIdAndUpdate(id, { rating }, { new: true });
+        if (!doctor) {
+            return res.status(404).send({ error: 'Doctor not found' });
+        }
+        res.status(200).send({ message: 'Rating updated successfully', doctor });
+    } catch (error) {
+        res.status(500).send({ error: 'Error updating rating' });
+    }
+});
+
+app.post('/add-record', async (req, res) => {
+    try {
+        console.log('Received POST data:', req.body);
+        const {
+            motherName,
+            babyHeight,
+            babyWeight,
+            ageDays,
+            meanWeight,
+            healthStatus
+        } = req.body;
+        // Initialize an array to collect missing fields
+        const missingFields = [];
+        if (!motherName) missingFields.push('motherName');
+        if (babyHeight === undefined) missingFields.push('babyHeight');
+        if (babyWeight === undefined) missingFields.push('babyWeight');
+        if (ageDays === undefined) missingFields.push('ageDays');
+        if (meanWeight === undefined) missingFields.push('meanWeight');
+        if (!healthStatus) missingFields.push('healthStatus');
+        if (missingFields.length > 0) {
+            console.log(`Missing fields: ${missingFields.join(', ')}`);
+            return res.status(400).json({
+                message: `Missing required fields: ${missingFields.join(', ')}`
+            });
+        }
+        // Additional validation
+        if (typeof motherName !== 'string' || motherName.trim() === '') {
+            return res.status(400).json({ message: 'Invalid mother name.' });
+        }
+        if (typeof babyHeight !== 'number' || babyHeight <= 0) {
+            return res.status(400).json({ message: 'Invalid baby height.' });
+        }
+        if (typeof babyWeight !== 'number' || babyWeight <= 0) {
+            return res.status(400).json({ message: 'Invalid baby weight.' });
+        }
+        if (typeof ageDays !== 'number' || ageDays < 0) {
+            return res.status(400).json({ message: 'Invalid age in days.' });
+        }
+        if (typeof meanWeight !== 'number' || meanWeight <= 0) {
+            return res.status(400).json({ message: 'Invalid mean weight.' });
+        }
+        if (!['Good', 'Needs Attention'].includes(healthStatus)) {
+            return res.status(400).json({ message: 'Invalid health status.' });
+        }
+        // Create a new health monitoring record
+        const healthRecord = new HealthMonitoring({
+            motherName: motherName.trim(),
+            babyHeight,
+            babyWeight,
+            ageDays,
+            meanWeight,
+            healthStatus,
+            // calculatedAt is automatically set by the model
+        });
+        // Save to database
+        const savedRecord = await healthRecord.save();
+        console.log('Health record saved successfully:', savedRecord);
+        return res.status(201).json(savedRecord);
+    } catch (error) {
+        console.error('Error creating health monitoring record:', error);
+        return res.status(500).json({ message: 'Server Error. Please try again later.' });
+    }
+});
+
+app.get('/modify-mother', async (req, res) => {
+    try {
+        const { motherName } = req.query;
+        if (!motherName) {
+            return res.status(400).json({ message: 'Mother name is required.' });
+        }
+        console.log(`Fetching records for mother: ${motherName}`);
+        // Find records by motherName, case-insensitive
+        const healthRecords = await HealthMonitoring.find({
+            motherName: { $regex: new RegExp(`^${motherName}$`, 'i') }
+        }).sort({ calculatedAt: -1 });
+        console.log(`Found ${healthRecords.length} records for mother: ${motherName}`);
+        return res.status(200).json(healthRecords);
+    } catch (error) {
+        console.error('Error fetching health monitoring records:', error);
+        return res.status(500).json({ message: 'Server Error. Please try again later.' });
+    }
+});
+// @route   DELETE /api/v1/health/:id
+// @desc    Delete a specific health monitoring record
+// @access  Public (Consider securing this endpoint)
+app.delete('/delete-record/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`Attempting to delete record with ID: ${id}`);
+        // Validate ID format
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            console.log('Invalid ID format.');
+            return res.status(400).json({ message: 'Invalid record ID.' });
+        }
+        // Attempt to find and delete the record
+        const deletedRecord = await HealthMonitoring.findByIdAndDelete(id);
+        if (!deletedRecord) {
+            console.log('Record not found.');
+            return res.status(404).json({ message: 'Record not found.' });
+        }
+        console.log('Record deleted successfully.');
+        return res.status(200).json({ message: 'Record deleted successfully.' });
+    } catch (error) {
+        console.error('Error deleting health monitoring record:', error);
+        return res.status(500).json({ message: 'Server Error. Please try again later.' });
+    }
+});
+
+// Create a new pregnancy record
+app.post('/paregnancy-add', async (req, res) => {
+    try {
+        const { motherName, pregnancyStartDate } = req.body;
+        const pregnancy = new Pregnancy({ motherName, pregnancyStartDate });
+        await pregnancy.save();
+        res.status(201).json(pregnancy);
+    } catch (error) {
+        console.error('Error creating pregnancy record:', error);
+        res.status(400).json({ message: error.message });
+    }
+});
+// Get a pregnancy record by motherName
+app.get('/pregnancy-get', async (req, res) => {
+    try {
+        const { motherName } = req.query;
+        if (!motherName) {
+            return res.status(400).json({ message: 'Mother name is required.' });
+        }
+        const pregnancy = await Pregnancy.findOne({ motherName });
+        if (!pregnancy) {
+            return res.status(404).json({ message: 'Pregnancy record not found.' });
+        }
+        res.status(200).json(pregnancy);
+    } catch (error) {
+        console.error('Error fetching pregnancy record:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
+
+
+
+
+
 
 const connect = async () => {
     try {
