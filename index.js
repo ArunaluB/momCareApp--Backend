@@ -247,51 +247,63 @@ app.patch('/update-rating/:id', async (req, res) => {
 });
 
 app.post('/add-record', async (req, res) => {
-    try {
-        console.log('Received POST data:', req.body);
-        const {
+    app.post('/add-record', async (req, res) => {
+        try {
+          console.log('Received POST data:', req.body);
+      
+          const {
             motherName,
             babyHeight,
             babyWeight,
             ageDays,
             meanWeight,
             healthStatus
-        } = req.body;
-        // Initialize an array to collect missing fields
-        const missingFields = [];
-        if (!motherName) missingFields.push('motherName');
-        if (babyHeight === undefined) missingFields.push('babyHeight');
-        if (babyWeight === undefined) missingFields.push('babyWeight');
-        if (ageDays === undefined) missingFields.push('ageDays');
-        if (meanWeight === undefined) missingFields.push('meanWeight');
-        if (!healthStatus) missingFields.push('healthStatus');
-        if (missingFields.length > 0) {
+          } = req.body;
+      
+          // Initialize an array to collect missing fields
+          const missingFields = [];
+      
+          if (!motherName) missingFields.push('motherName');
+          if (babyHeight === undefined) missingFields.push('babyHeight');
+          if (babyWeight === undefined) missingFields.push('babyWeight');
+          if (ageDays === undefined) missingFields.push('ageDays');
+          if (meanWeight === undefined) missingFields.push('meanWeight');
+          if (!healthStatus) missingFields.push('healthStatus');
+      
+          if (missingFields.length > 0) {
             console.log(`Missing fields: ${missingFields.join(', ')}`);
-            return res.status(400).json({
-                message: `Missing required fields: ${missingFields.join(', ')}`
+            return res.status(400).json({ 
+              message: `Missing required fields: ${missingFields.join(', ')}`
             });
-        }
-        // Additional validation
-        if (typeof motherName !== 'string' || motherName.trim() === '') {
+          }
+      
+          // Additional validation
+          if (typeof motherName !== 'string' || motherName.trim() === '') {
             return res.status(400).json({ message: 'Invalid mother name.' });
-        }
-        if (typeof babyHeight !== 'number' || babyHeight <= 0) {
+          }
+      
+          if (typeof babyHeight !== 'number' || babyHeight <= 0) {
             return res.status(400).json({ message: 'Invalid baby height.' });
-        }
-        if (typeof babyWeight !== 'number' || babyWeight <= 0) {
+          }
+      
+          if (typeof babyWeight !== 'number' || babyWeight <= 0) {
             return res.status(400).json({ message: 'Invalid baby weight.' });
-        }
-        if (typeof ageDays !== 'number' || ageDays < 0) {
+          }
+      
+          if (typeof ageDays !== 'number' || ageDays < 0) {
             return res.status(400).json({ message: 'Invalid age in days.' });
-        }
-        if (typeof meanWeight !== 'number' || meanWeight <= 0) {
+          }
+      
+          if (typeof meanWeight !== 'number' || meanWeight <= 0) {
             return res.status(400).json({ message: 'Invalid mean weight.' });
-        }
-        if (!['Good', 'Needs Attention'].includes(healthStatus)) {
+          }
+      
+          if (!['Good', 'Needs Attention'].includes(healthStatus)) {
             return res.status(400).json({ message: 'Invalid health status.' });
-        }
-        // Create a new health monitoring record
-        const healthRecord = new HealthMonitoring({
+          }
+      
+          // Create a new health monitoring record
+          const healthRecord = new HealthMonitoring({
             motherName: motherName.trim(),
             babyHeight,
             babyWeight,
@@ -299,15 +311,18 @@ app.post('/add-record', async (req, res) => {
             meanWeight,
             healthStatus,
             // calculatedAt is automatically set by the model
-        });
-        // Save to database
-        const savedRecord = await healthRecord.save();
-        console.log('Health record saved successfully:', savedRecord);
-        return res.status(201).json(savedRecord);
-    } catch (error) {
-        console.error('Error creating health monitoring record:', error);
-        return res.status(500).json({ message: 'Server Error. Please try again later.' });
-    }
+          });
+      
+          // Save to database
+          const savedRecord = await Health.save();
+          console.log('Health record saved successfully:', savedRecord);
+          return res.status(201).json(savedRecord);
+        } catch (error) {
+          console.error('Error creating health monitoring record:', error);
+          return res.status(500).json({ message: 'Server Error. Please try again later.' });
+        }
+      });
+      
 });
 
 app.get('/modify-mother', async (req, res) => {
@@ -318,7 +333,7 @@ app.get('/modify-mother', async (req, res) => {
         }
         console.log(`Fetching records for mother: ${motherName}`);
         // Find records by motherName, case-insensitive
-        const healthRecords = await HealthMonitoring.find({
+        const healthRecords = await Health.find({
             motherName: { $regex: new RegExp(`^${motherName}$`, 'i') }
         }).sort({ calculatedAt: -1 });
         console.log(`Found ${healthRecords.length} records for mother: ${motherName}`);
@@ -341,7 +356,7 @@ app.delete('/delete-record/:id', async (req, res) => {
             return res.status(400).json({ message: 'Invalid record ID.' });
         }
         // Attempt to find and delete the record
-        const deletedRecord = await HealthMonitoring.findByIdAndDelete(id);
+        const deletedRecord = await Health.findByIdAndDelete(id);
         if (!deletedRecord) {
             console.log('Record not found.');
             return res.status(404).json({ message: 'Record not found.' });
