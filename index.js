@@ -274,32 +274,7 @@ app.post('/add-record', async (req, res) => {
               message: `Missing required fields: ${missingFields.join(', ')}`
             });
           }
-      
-          // Additional validation
-          if (typeof motherName !== 'string' || motherName.trim() === '') {
-            return res.status(400).json({ message: 'Invalid mother name.' });
-          }
-      
-          if (typeof babyHeight !== 'number' || babyHeight <= 0) {
-            return res.status(400).json({ message: 'Invalid baby height.' });
-          }
-      
-          if (typeof babyWeight !== 'number' || babyWeight <= 0) {
-            return res.status(400).json({ message: 'Invalid baby weight.' });
-          }
-      
-          if (typeof ageDays !== 'number' || ageDays < 0) {
-            return res.status(400).json({ message: 'Invalid age in days.' });
-          }
-      
-          if (typeof meanWeight !== 'number' || meanWeight <= 0) {
-            return res.status(400).json({ message: 'Invalid mean weight.' });
-          }
-      
-          if (!['Good', 'Needs Attention'].includes(healthStatus)) {
-            return res.status(400).json({ message: 'Invalid health status.' });
-          }
-      
+          
           // Create a new health monitoring record
           const healthRecord = new Health({
             motherName: motherName.trim(),
