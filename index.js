@@ -301,7 +301,7 @@ app.post('/add-record', async (req, res) => {
           }
       
           // Create a new health monitoring record
-          const healthRecord = new HealthMonitoring({
+          const healthRecord = new Health({
             motherName: motherName.trim(),
             babyHeight,
             babyWeight,
@@ -312,7 +312,7 @@ app.post('/add-record', async (req, res) => {
           });
       
           // Save to database
-          const savedRecord = await Health.save();
+          const savedRecord = await healthRecord.save();
           console.log('Health record saved successfully:', savedRecord);
           return res.status(201).json(savedRecord);
         } catch (error) {
