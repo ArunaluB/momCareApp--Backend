@@ -209,8 +209,6 @@ app.delete('/delete-visit/:id', async (req, res) => {
 });
 
 
-
-
 // Doctor Routes
 app.post('/add-doctor', async (req, res) => {
     try {
