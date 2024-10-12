@@ -245,11 +245,8 @@ app.patch('/update-rating/:id', async (req, res) => {
 });
 
 app.post('/add-record', async (req, res) => {
-    app.post('/add-record', async (req, res) => {
-        try {
-          console.log('Received POST data:', req.body);
-      
-          const {
+    try {
+        const {
             motherName,
             babyHeight,
             babyWeight,
@@ -257,45 +254,26 @@ app.post('/add-record', async (req, res) => {
             meanWeight,
             healthStatus
           } = req.body;
-      
-          // Initialize an array to collect missing fields
-          const missingFields = [];
-      
-          if (!motherName) missingFields.push('motherName');
-          if (babyHeight === undefined) missingFields.push('babyHeight');
-          if (babyWeight === undefined) missingFields.push('babyWeight');
-          if (ageDays === undefined) missingFields.push('ageDays');
-          if (meanWeight === undefined) missingFields.push('meanWeight');
-          if (!healthStatus) missingFields.push('healthStatus');
-      
-          if (missingFields.length > 0) {
-            console.log(`Missing fields: ${missingFields.join(', ')}`);
-            return res.status(400).json({ 
-              message: `Missing required fields: ${missingFields.join(', ')}`
-            });
-          }
-          
-          // Create a new health monitoring record
-          const healthRecord = new Health({
-            motherName: motherName.trim(),
-            babyHeight,
-            babyWeight,
-            ageDays,
-            meanWeight,
-            healthStatus,
-            // calculatedAt is automatically set by the model
-          });
-      
-          // Save to database
-          const savedRecord = await healthRecord.save();
-          console.log('Health record saved successfully:', savedRecord);
-          return res.status(201).json(savedRecord);
-        } catch (error) {
-          console.error('Error creating health monitoring record:', error);
-          return res.status(500).json({ message: 'Server Error. Please try again later.' });
-        }
+       // Create a new health monitoring record
+    const healthRecord = new Health({
+        motherName: motherName.trim(),
+        babyHeight,
+        babyWeight,
+        ageDays,
+        meanWeight,
+        healthStatus,
+        // calculatedAt is automatically set by the model
       });
-      
+  
+      // Save to database
+      const savedRecord = await healthRecord.save();
+      console.log('Health record saved successfully:', savedRecord);
+      return res.status(201).json(savedRecord);
+    } catch (error) {
+        console.error('Error creating health monitoring record:', error);
+        return res.status(400).json({ message: error.message });
+    }
+    
 });
 
 app.get('/modify-mother', async (req, res) => {
